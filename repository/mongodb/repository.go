@@ -5,6 +5,7 @@ import (
 	"go-url-shortener/handler"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -59,8 +60,47 @@ func NewMongodbRepository(mongodbURL string, mongodb string, mongodbTimeout int)
 
 func (r *mongodbRepository) Find(code string) (*handler.Redirect, error) {
 
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	redirect := &handler.Redirect{}
+
+	collection := r.client.Database(r.database).Collection("redirects")
+
+	filter := bson.M{"code": code}
+
+	err := collection.FindOne(ctx, filter).Decode(&redirect)
+
+	if err != nil {
+
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.Wrap(handler.ErrRedirectNotFound, "repository.Redirect.Find")
+		}
+		return nil, errors.Wrap(err, "repository.Redirect.Find")
+	}
+
+	return redirect, nil
 }
 
-func (r *mongodbRepository) Store(redirect *handler.Redirect) err {
+func (r *mongodbRepository) Store(redirect *handler.Redirect) error {
 
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	collection := r.client.Database(r.database).Collection("redirects")
+
+	_, err := collection.InsertOne(
+		ctx,
+		bson.M{
+			"code":      redirect.Code,
+			"url":       redirect.URL,
+			"credit_at": redirect.CreatedAt,
+		},
+	)
+
+	if err != nil {
+		return errors.Wrap(err, "repository.Redirect.Store")
+	}
+
+	return nil
 }
