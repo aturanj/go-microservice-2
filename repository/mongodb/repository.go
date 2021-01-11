@@ -42,17 +42,16 @@ func newMongodbClient(mongodbURL string, mongodbTimeout int) (*mongo.Client, err
 //NewMongodbRepository returns RedirectionRepository
 func NewMongodbRepository(mongodbURL string, mongodb string, mongodbTimeout int) (handler.RedirectRepository, error) {
 
-	mongodbRepository := &mongodbRepository{
-		timeout:  time.Duration(mongodbTimeout) * time.Second,
-		database: mongodb,
-	}
-
 	mongodbClient, err := newMongodbClient(mongodbURL, mongodbTimeout)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "repository.NewMongodbRepository")
 	}
 
+	mongodbRepository := &mongodbRepository{
+		timeout:  time.Duration(mongodbTimeout) * time.Second,
+		database: mongodb,
+	}
 	mongodbRepository.client = mongodbClient
 
 	return mongodbRepository, nil
@@ -63,11 +62,11 @@ func (r *mongodbRepository) Find(code string) (*handler.Redirect, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
-	redirect := &handler.Redirect{}
-
 	collection := r.client.Database(r.database).Collection("redirects")
 
 	filter := bson.M{"code": code}
+
+	redirect := &handler.Redirect{}
 
 	err := collection.FindOne(ctx, filter).Decode(&redirect)
 
