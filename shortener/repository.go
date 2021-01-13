@@ -1,4 +1,4 @@
-package handler
+package shortener
 
 //RedirectRepository redirect repo interface
 type RedirectRepository interface {

@@ -1,4 +1,4 @@
-package handler
+package shortener
 
 //RedirectSerializer serialization interface
 type RedirectSerializer interface {

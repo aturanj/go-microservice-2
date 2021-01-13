@@ -1,4 +1,4 @@
-package handler
+package shortener
 
 //RedirectService is using for url-code redirection
 type RedirectService interface {

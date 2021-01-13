@@ -2,7 +2,7 @@ package redis
 
 import (
 	"fmt"
-	"go-url-shortener/handler"
+	"go-url-shortener/shortener"
 	"strconv"
 
 	"github.com/go-redis/redis"
@@ -32,7 +32,7 @@ func newRedisClient(redisURL string) (*redis.Client, error) {
 }
 
 //NewRedisRepository returns RedirectRepository
-func NewRedisRepository(redisURL string) (handler.RedirectRepository, error) {
+func NewRedisRepository(redisURL string) (shortener.RedirectRepository, error) {
 
 	client, err := newRedisClient(redisURL)
 
@@ -50,7 +50,7 @@ func (r *redisRepository) generateKey(code string) string {
 	return fmt.Sprintf("redirect:%s", code)
 }
 
-func (r *redisRepository) Find(code string) (*handler.Redirect, error) {
+func (r *redisRepository) Find(code string) (*shortener.Redirect, error) {
 
 	key := r.generateKey(code)
 
@@ -61,7 +61,7 @@ func (r *redisRepository) Find(code string) (*handler.Redirect, error) {
 	}
 
 	if len(data) == 0 {
-		return nil, errors.Wrap(handler.ErrRedirectNotFound, "repository.Redirect.Find")
+		return nil, errors.Wrap(shortener.ErrRedirectNotFound, "repository.Redirect.Find")
 	}
 
 	createdAt, err := strconv.ParseInt(data["created_at"], 10, 64)
@@ -70,7 +70,7 @@ func (r *redisRepository) Find(code string) (*handler.Redirect, error) {
 		return nil, errors.Wrap(err, "repository.Redirect.Find")
 	}
 
-	redirect := &handler.Redirect{}
+	redirect := &shortener.Redirect{}
 	redirect.Code = data["code"]
 	redirect.URL = data["url"]
 	redirect.CreatedAt = createdAt
@@ -78,7 +78,7 @@ func (r *redisRepository) Find(code string) (*handler.Redirect, error) {
 	return redirect, nil
 }
 
-func (r *redisRepository) Store(redirect *handler.Redirect) error {
+func (r *redisRepository) Store(redirect *shortener.Redirect) error {
 
 	key := r.generateKey(redirect.Code)
 

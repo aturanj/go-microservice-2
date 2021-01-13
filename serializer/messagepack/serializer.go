@@ -1,7 +1,7 @@
 package messagepack
 
 import (
-	shortener "go-url-shortener/handler"
+	shortener "go-url-shortener/shortener"
 
 	"github.com/pkg/errors"
 	"github.com/vmihailenco/msgpack/v5"

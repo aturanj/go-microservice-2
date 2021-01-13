@@ -2,7 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"go-url-shortener/handler"
+	"go-url-shortener/shortener"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -40,7 +40,7 @@ func newMongodbClient(mongodbURL string, mongodbTimeout int) (*mongo.Client, err
 }
 
 //NewMongodbRepository returns RedirectionRepository
-func NewMongodbRepository(mongodbURL string, mongodb string, mongodbTimeout int) (handler.RedirectRepository, error) {
+func NewMongodbRepository(mongodbURL string, mongodb string, mongodbTimeout int) (shortener.RedirectRepository, error) {
 
 	mongodbClient, err := newMongodbClient(mongodbURL, mongodbTimeout)
 
@@ -57,7 +57,7 @@ func NewMongodbRepository(mongodbURL string, mongodb string, mongodbTimeout int)
 	return mongodbRepository, nil
 }
 
-func (r *mongodbRepository) Find(code string) (*handler.Redirect, error) {
+func (r *mongodbRepository) Find(code string) (*shortener.Redirect, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
@@ -66,14 +66,14 @@ func (r *mongodbRepository) Find(code string) (*handler.Redirect, error) {
 
 	filter := bson.M{"code": code}
 
-	redirect := &handler.Redirect{}
+	redirect := &shortener.Redirect{}
 
 	err := collection.FindOne(ctx, filter).Decode(&redirect)
 
 	if err != nil {
 
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.Wrap(handler.ErrRedirectNotFound, "repository.Redirect.Find")
+			return nil, errors.Wrap(shortener.ErrRedirectNotFound, "repository.Redirect.Find")
 		}
 		return nil, errors.Wrap(err, "repository.Redirect.Find")
 	}
@@ -81,7 +81,7 @@ func (r *mongodbRepository) Find(code string) (*handler.Redirect, error) {
 	return redirect, nil
 }
 
-func (r *mongodbRepository) Store(redirect *handler.Redirect) error {
+func (r *mongodbRepository) Store(redirect *shortener.Redirect) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()

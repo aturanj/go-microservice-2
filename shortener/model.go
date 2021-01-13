@@ -1,4 +1,4 @@
-package handler
+package shortener
 
 //Redirect struct is using for code->url redirection
 type Redirect struct {

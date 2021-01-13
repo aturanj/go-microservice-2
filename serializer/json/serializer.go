@@ -3,7 +3,7 @@ package json
 import (
 	"encoding/json"
 
-	shortener "go-url-shortener/handler"
+	shortener "go-url-shortener/shortener"
 
 	"github.com/pkg/errors"
 )
