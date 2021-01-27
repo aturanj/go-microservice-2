@@ -4,8 +4,14 @@ import (
 	"fmt"
 	"go-url-shortener/shortener"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 
 	api "go-url-shortener/api"
 	mng "go-url-shortener/repository/mongodb"
@@ -18,6 +24,29 @@ func main() {
 	service := shortener.NewRedirectService(repo)
 	handler := api.NewHandler(service)
 
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+
+	router.Get("/{code}", handler.Get)
+	router.Post("/", handler.Post)
+
+	errors := make(chan error, 2)
+
+	go func() {
+		fmt.Println("Listening port : 8000")
+		errors <- http.ListenAndServe(httpPort(), router)
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT)
+		errors <- fmt.Errorf("%s", <-c)
+	}()
+
+	fmt.Printf("Terminated %s", <-errors)
 }
 
 func httpPort() string {
